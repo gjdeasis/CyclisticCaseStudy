@@ -1,0 +1,143 @@
+--Appendix A: SQL Queries for the preparation phase of the Cyclistic Case Study.
+
+/*
+The first query is to create a new table named cyclistic_records_2023.
+This new table contains all records from January to December 2023.
+Two columns, ride_length and day_of_week, were created and populated within this query 
+*/
+
+--Create new table
+CREATE TABLE `robotic-casing-414819.cyclistic.cyclistic_records_2023` AS
+
+/*
+Select all columns and create two new columns
+day_of_week: each number (1-7) represents a day of the week, Sunday = 1
+ride_length: length of the ride
+*/
+SELECT
+  *,
+  EXTRACT(DAYOFWEEK FROM started_at) AS day_of_week,
+  DATETIME_DIFF(ended_at, started_at, minute) AS ride_length_min,
+
+--Combine 12 months of data
+FROM (
+  SELECT *
+  FROM `robotic-casing-414819.cyclistic.january-2023`
+  UNION ALL
+
+  SELECT *
+  FROM `robotic-casing-414819.cyclistic.february-2023`
+  UNION ALL
+
+  SELECT *
+  FROM `robotic-casing-414819.cyclistic.march-2023`
+  UNION ALL
+
+  SELECT *
+  FROM `robotic-casing-414819.cyclistic.april-2023`
+  UNION ALL
+
+  SELECT *
+  FROM `robotic-casing-414819.cyclistic.may-2023`
+  UNION ALL
+
+  SELECT *
+  FROM `robotic-casing-414819.cyclistic.june-2023`
+  UNION ALL
+
+  SELECT *
+  FROM `robotic-casing-414819.cyclistic.july-2023`
+  UNION ALL
+
+  SELECT *
+  FROM `robotic-casing-414819.cyclistic.august-2023`
+  UNION ALL
+
+  SELECT *
+  FROM `robotic-casing-414819.cyclistic.september-2023`
+  UNION ALL
+
+  SELECT *
+  FROM `robotic-casing-414819.cyclistic.october-2023`
+  UNION ALL
+
+  SELECT *
+  FROM `robotic-casing-414819.cyclistic.november-2023`
+  UNION ALL
+
+  SELECT *
+  FROM `robotic-casing-414819.cyclistic.december-2023`
+)
+
+--Order records with the earliest ride date first
+ORDER BY
+  started_at ASC
+
+
+
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+/*
+Below is the second query to get to know the data.
+See comments to understand what each part of the query does.
+*/
+
+SELECT
+--Check the length of ride_id
+--Check min/max of length to see if ID lengths are consistent
+--Both resulted in 16, meaning all ID lengths are 16
+  MAX(LENGTH(ride_id)) AS max_length_id,
+  MIN(LENGTH(ride_id)) AS min_length_id,
+
+--Check number of rows
+--Dataset size is 15 columns by 5719877 rows
+  COUNT(*) AS num_rows,
+
+--Check if ride IDs are distinct
+--num_rows = num_ids meaning there are no duplicates
+  COUNT(DISTINCT(ride_id)) AS num_ids,
+
+--Check number of distinct stations and see if there are as many start stations as there are end stations
+--There are more start station names that than there are start station ids
+--There are more end station names that than there are end station ids
+  COUNT(DISTINCT(start_station_id)) AS num_start_station_id,
+  COUNT(DISTINCT(start_station_name)) AS num_start_station_name,
+  COUNT(DISTINCT(end_station_id)) AS num_end_station_id,
+  COUNT(DISTINCT(end_station_name)) AS num_end_station_name,
+
+--Check number of bike types
+--There are three types: classic_bike, electric_bike, docked_bike
+  COUNT(DISTINCT(rideable_type)) AS num_rideable_type,
+
+--Check that there are only two member types
+--Resulted in 2, as expected
+  COUNT(DISTINCT(member_casual)) AS num_member_types,
+
+--Check if there are nulls under the member type columns
+--No nulls
+  COUNT(*) - COUNT(member_casual) AS num_null_member_casual,
+
+--Check for nulls for the rest of the columns
+--Technically, I don't need to check the last two columns because I made those and it should all be filled (but always double check)
+  COUNT(*) - COUNT(ride_id) AS num_null_ride_id, --0
+  COUNT(*) - COUNT(rideable_type) AS num_null_rideable_type, --0
+  COUNT(*) - COUNT(started_at) AS num_null_started_at, --0
+  COUNT(*) - COUNT(ended_at) AS num_null_ended_at,--0
+  COUNT(*) - COUNT(start_station_name) AS num_null_start_station_name, --875716
+  COUNT(*) - COUNT(start_station_id) AS num_null_start_station_id, --875848
+  COUNT(*) - COUNT(end_station_name) AS num_null_end_station_name, --929202
+  COUNT(*) - COUNT(end_station_id) AS num_null_end_station_id, --929343
+  COUNT(*) - COUNT(start_lat) AS num_null_start_lat, --0
+  COUNT(*) - COUNT(start_lng) AS num_null_start_lng, --0
+  COUNT(*) - COUNT(end_lat) AS num_null_end_lat, --6990
+  COUNT(*) - COUNT(end_lng) AS num_null_end_lng, --6990
+  COUNT(*) - COUNT(ride_length_min) AS num_null_ride_length, --0
+  COUNT(*) - COUNT(day_of_week) AS num_null_day_of_week, --0
+
+--Check min and max ride duration
+--Some rides have negative numbers
+--Some rides are longer than 1 day (1440 min) 
+MIN(ride_length_min) AS min_ride_dur, -- -16656
+MAX(ride_length_min) AS max_ride_dur --98489
+
+FROM `robotic-casing-414819.cyclistic.cyclistic_records_2023`
